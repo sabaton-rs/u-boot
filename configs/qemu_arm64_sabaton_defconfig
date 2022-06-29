@@ -65,4 +65,4 @@ CONFIG_USB_EHCI_PCI=y
 CONFIG_TPM=y
 CONFIG_ANDROID_AB=y
 CONFIG_CMD_AB_SELECT=y
-CONFIG_BOOTCOMMAND="nvme scan;fatload nvme 0:2 0x40000000 /virt.dtb;fatload nvme 0:2 0x40040000 /vmlinuz;ab_select slot_name nvme 0#misc;setenv bootargs \"console=ttyAMA0 os.root=/dev/vda3 oops=panic panic_on_warn=1 panic=-1 ftrace_dump_on_oops=orig_cpu earlyprintk=serial slub_debug=UZ sabaton.boot.slot_suffix=${slot_name}\";booti 0x40040000 - 0x40000000"
+CONFIG_BOOTCOMMAND="nvme scan;ab_select slot_name nvme 0#misc;fatload nvme 0#boot_${slot_name} 0x40040000 /vmlinuz;setenv bootargs \"console=ttyAMA0 oops=panic panic_on_warn=1 panic=-1 ftrace_dump_on_oops=orig_cpu earlyprintk=serial slub_debug=UZ sabaton.boot.slot_suffix=${slot_name}\";booti 0x40040000 - 0x40000000"
