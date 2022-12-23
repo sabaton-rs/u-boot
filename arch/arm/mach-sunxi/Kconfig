@@ -1,9 +1,5 @@
 if ARCH_SUNXI
 
-config SPL_LDSCRIPT
-	default "arch/arm/cpu/arm926ejs/sunxi/u-boot-spl.lds" if MACH_SUNIV
-	default "arch/arm/cpu/armv7/sunxi/u-boot-spl.lds" if !ARM64
-
 config IDENT_STRING
 	default " Allwinner Technology"
 
@@ -189,6 +185,8 @@ config MACH_SUNIV
 	select CPU_ARM926EJS
 	select SUNXI_GEN_SUN6I
 	select SUPPORT_SPL
+	select SKIP_LOWLEVEL_INIT_ONLY
+	select SPL_SKIP_LOWLEVEL_INIT_ONLY
 
 config MACH_SUN4I
 	bool "sun4i (Allwinner A10)"
@@ -619,6 +617,18 @@ config SYS_BOARD
 config SYS_SOC
 	default "sunxi"
 
+config SUNXI_MINIMUM_DRAM_MB
+	int "minimum DRAM size"
+	default 32 if MACH_SUNIV
+	default 64 if MACH_SUN8I_V3S
+	default 256
+	---help---
+	Minimum DRAM size expected on the board. Traditionally we assumed
+	256 MB, so that U-Boot would load at 160MB. With co-packaged DRAM
+	we have smaller sizes, though, so that U-Boot's own load address and
+	the default payload addresses must be shifted down.
+	This is expected to be fixed by the SoC selection.
+
 config UART0_PORT_F
 	bool "UART0 on MicroSD breakout board"
 	---help---
@@ -682,15 +692,6 @@ config MMC_SUNXI_SLOT_EXTRA
 	sunxi builds always enable mmc0, some boards also have a second sdcard
 	slot or emmc on mmc1 - mmc3. Setting this to 1, 2 or 3 will enable
 	support for this.
-
-config INITIAL_USB_SCAN_DELAY
-	int "delay initial usb scan by x ms to allow builtin devices to init"
-	default 0
-	---help---
-	Some boards have on board usb devices which need longer than the
-	USB spec's 1 second to connect from board powerup. Set this config
-	option to a non 0 value to add an extra delay before the first usb
-	bus scan.
 
 config USB0_VBUS_PIN
 	string "Vbus enable pin for usb0 (otg)"
@@ -787,7 +788,7 @@ config VIDEO_SUNXI
 	depends on !MACH_SUN9I
 	depends on !MACH_SUN50I
 	depends on !SUN50I_GEN_H6
-	select DM_VIDEO
+	select VIDEO
 	select DISPLAY
 	imply VIDEO_DT_SIMPLEFB
 	default y
@@ -852,10 +853,11 @@ config VIDEO_LCD_MODE
 
 config VIDEO_LCD_DCLK_PHASE
 	int "LCD panel display clock phase"
-	depends on VIDEO_SUNXI || DM_VIDEO
+	depends on VIDEO_SUNXI || VIDEO
 	default 1
+	range 0 3
 	---help---
-	Select LCD panel display clock phase shift, range 0-3.
+	Select LCD panel display clock phase shift
 
 config VIDEO_LCD_POWER
 	string "LCD panel power enable pin"
@@ -926,7 +928,7 @@ config SUNXI_DE2
 config VIDEO_DE2
 	bool "Display Engine 2 video driver"
 	depends on SUNXI_DE2
-	select DM_VIDEO
+	select VIDEO
 	select DISPLAY
 	select VIDEO_DW_HDMI
 	imply VIDEO_DT_SIMPLEFB
@@ -1010,7 +1012,7 @@ config SPL_STACK_R_ADDR
 
 config SPL_SPI_SUNXI
 	bool "Support for SPI Flash on Allwinner SoCs in SPL"
-	depends on MACH_SUN4I || MACH_SUN5I || MACH_SUN7I || MACH_SUNXI_H3_H5 || MACH_SUN50I || MACH_SUN8I_R40 || MACH_SUN50I_H6 || MACH_SUNIV
+	depends on MACH_SUN4I || MACH_SUN5I || MACH_SUN7I || MACH_SUNXI_H3_H5 || MACH_SUN50I || MACH_SUN8I_R40 || SUN50I_GEN_H6 || MACH_SUNIV
 	help
 	  Enable support for SPI Flash. This option allows SPL to read from
 	  sunxi SPI Flash. It uses the same method as the boot ROM, so does

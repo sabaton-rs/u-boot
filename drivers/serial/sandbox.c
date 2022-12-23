@@ -12,7 +12,6 @@
 #include <common.h>
 #include <console.h>
 #include <dm.h>
-#include <lcd.h>
 #include <os.h>
 #include <serial.h>
 #include <video.h>
@@ -114,7 +113,7 @@ static ssize_t sandbox_serial_puts(struct udevice *dev, const char *s,
 	struct sandbox_serial_priv *priv = dev_get_priv(dev);
 	ssize_t ret;
 
-	if (s[len - 1] == '\n')
+	if (len && s[len - 1] == '\n')
 		priv->start_of_line = true;
 
 	if (sandbox_serial_enabled) {
@@ -140,7 +139,7 @@ static int sandbox_serial_pending(struct udevice *dev, bool input)
 		return 0;
 
 	os_usleep(100);
-	if (IS_ENABLED(CONFIG_DM_VIDEO) && !IS_ENABLED(CONFIG_SPL_BUILD))
+	if (IS_ENABLED(CONFIG_VIDEO) && !IS_ENABLED(CONFIG_SPL_BUILD))
 		video_sync_all();
 	avail = membuff_putraw(&priv->buf, 100, false, &data);
 	if (!avail)

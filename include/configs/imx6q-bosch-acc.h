@@ -89,34 +89,29 @@
 #define CONFIG_SYS_INIT_RAM_ADDR        IRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE        IRAM_SIZE
 
-#define CONFIG_SYS_INIT_SP_OFFSET       (CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
-#define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
-
 /* SPL */
 #ifdef CONFIG_SPL
 #include "imx6_spl.h"
 
 #ifdef CONFIG_SPL_BUILD
-#define CONFIG_SYS_FSL_USDHC_NUM 2
+#define CFG_SYS_FSL_USDHC_NUM 2
 
 #ifdef CONFIG_SYS_BOOT_EMMC
 
 /* Boot from eMMC */
-#define CONFIG_SYS_FSL_ESDHC_ADDR 1
+#define CFG_SYS_FSL_ESDHC_ADDR 1
 
 #else
 
 /* Boot from SD-card */
-#  define CONFIG_SYS_FSL_ESDHC_ADDR	0
+#  define CFG_SYS_FSL_ESDHC_ADDR	0
 
 #endif
 
 #endif
 #endif
 
-#define CONFIG_EHCI_HCD_INIT_AFTER_RESET
 #define CONFIG_MXC_USB_PORTSC            (PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS             0
-#define CONFIG_USB_MAX_CONTROLLER_COUNT  1	/* Enabled USB controller number */
 
 #endif /* __IMX6Q_ACC_H */

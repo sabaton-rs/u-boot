@@ -321,6 +321,11 @@ config PHY_XILINX_GMII2RGMII
 	  as bridge between MAC connected over GMII and external phy that
 	  is connected over RGMII interface.
 
+config PHY_XWAY
+	bool "Intel XWAY PHY support"
+	help
+	  This adds support for the Intel XWAY (formerly Lantiq) Gbe PHYs.
+
 config PHY_ETHERNET_ID
 	bool "Read ethernet PHY id"
 	depends on DM_GPIO
@@ -344,6 +349,13 @@ config PHY_NCSI
 	depends on DM_ETH
 
 endif #PHYLIB
+
+config FSL_MEMAC
+	bool "NXP mEMAC PHY support"
+
+config SYS_MEMAC_LITTLE_ENDIAN
+	bool "mEMAC is access in little endian mode"
+	depends on FSL_MEMAC || FSL_LS_MDIO
 
 config PHY_RESET_DELAY
 	int "Extra delay after reset before MII register access"

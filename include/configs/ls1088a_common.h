@@ -25,21 +25,15 @@
 
 #define LS1088ARDB_PB_BOARD            0x4A
 /* Link Definitions */
-#ifdef CONFIG_TFABOOT
-#define CONFIG_SYS_INIT_SP_ADDR		CONFIG_SYS_TEXT_BASE
-#else
-#define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_FSL_OCRAM_BASE + 0xfff0)
-#endif
 
 /* Link Definitions */
-#define CONFIG_SYS_FSL_QSPI_BASE	0x20000000
+#define CFG_SYS_FSL_QSPI_BASE	0x20000000
 
 #define CONFIG_VERY_BIG_RAM
 #define CONFIG_SYS_DDR_SDRAM_BASE	0x80000000UL
-#define CONFIG_SYS_FSL_DDR_SDRAM_BASE_PHY	0
+#define CFG_SYS_FSL_DDR_SDRAM_BASE_PHY	0
 #define CONFIG_SYS_SDRAM_BASE		CONFIG_SYS_DDR_SDRAM_BASE
 #define CONFIG_SYS_DDR_BLOCK2_BASE	0x8080000000ULL
-#define CONFIG_SYS_FSL_DDR_MAIN_NUM_CTRLS	1
 /*
  * SMP Definitinos
  */
@@ -75,7 +69,7 @@
  * CONFIG_SYS_FLASH_BASE has the final address (core view)
  * CONFIG_SYS_FLASH_BASE_PHYS has the final address (IFC view)
  * CONFIG_SYS_FLASH_BASE_PHYS_EARLY has the temporary IFC address
- * CONFIG_SYS_TEXT_BASE is linked to 0x30000000 for booting
+ * CONFIG_TEXT_BASE is linked to 0x30000000 for booting
  */
 
 #define CONFIG_SYS_FLASH_BASE			0x580000000ULL
@@ -120,11 +114,6 @@ unsigned long long get_qixis_addr(void);
 
 /* Miscellaneous configurable options */
 
-/* SATA */
-#ifdef CONFIG_SCSI
-#define CONFIG_SYS_SATA1		AHCI_BASE_ADDR1
-#endif
-
 /* Physical Memory Map */
 
 #define CONFIG_HWCONFIG
@@ -148,23 +137,7 @@ unsigned long long get_qixis_addr(void);
 	" 0x580e00000 \0"
 #endif
 
-/* Monitor Command Prompt */
-#define CONFIG_SYS_CBSIZE		512	/* Console I/O Buffer Size */
-#define CONFIG_SYS_PBSIZE		(CONFIG_SYS_CBSIZE + \
-					sizeof(CONFIG_SYS_PROMPT) + 16)
-#define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE /* Boot args buffer */
-#define CONFIG_SYS_MAXARGS		64	/* max command args */
-
 #ifdef CONFIG_SPL
-#define CONFIG_SPL_BSS_START_ADDR      0x80100000
-#define CONFIG_SPL_BSS_MAX_SIZE                0x00100000
-#define CONFIG_SPL_MAX_SIZE            0x16000
-#define CONFIG_SPL_STACK               (CONFIG_SYS_FSL_OCRAM_BASE + 0x9ff0)
-#define CONFIG_SPL_TARGET              "u-boot-with-spl.bin"
-
-#define CONFIG_SYS_SPL_MALLOC_SIZE     0x00100000
-#define CONFIG_SYS_SPL_MALLOC_START    0x80200000
-
 #ifdef CONFIG_NXP_ESBC
 #define CONFIG_U_BOOT_HDR_SIZE		(16 << 10)
 /*
@@ -173,12 +146,8 @@ unsigned long long get_qixis_addr(void);
  * size increases then increase this size in case of secure boot as
  * it uses raw u-boot image instead of fit image.
  */
-#define CONFIG_SYS_MONITOR_LEN         (0x100000 + CONFIG_U_BOOT_HDR_SIZE)
-#else
-#define CONFIG_SYS_MONITOR_LEN         0x100000
 #endif /* ifdef CONFIG_NXP_ESBC */
 
 #endif
-#define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
 
 #endif /* __LS1088_COMMON_H */

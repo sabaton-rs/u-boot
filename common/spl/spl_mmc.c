@@ -20,7 +20,7 @@
 static int mmc_load_legacy(struct spl_image_info *spl_image,
 			   struct spl_boot_device *bootdev,
 			   struct mmc *mmc,
-			   ulong sector, struct image_header *header)
+			   ulong sector, struct legacy_img_hdr *header)
 {
 	u32 image_offset_sectors;
 	u32 image_size_sectors;
@@ -83,7 +83,7 @@ int mmc_load_image_raw_sector(struct spl_image_info *spl_image,
 			      struct mmc *mmc, unsigned long sector)
 {
 	unsigned long count;
-	struct image_header *header;
+	struct legacy_img_hdr *header;
 	struct blk_desc *bd = mmc_get_blk_desc(mmc);
 	int ret = 0;
 
@@ -229,7 +229,7 @@ static int mmc_load_image_raw_os(struct spl_image_info *spl_image,
 {
 	int ret;
 
-#if defined(CONFIG_SYS_MMCSD_RAW_MODE_ARGS_SECTOR)
+#if CONFIG_VAL(SYS_MMCSD_RAW_MODE_ARGS_SECTOR)
 	unsigned long count;
 
 	count = blk_dread(mmc_get_blk_desc(mmc),
@@ -398,6 +398,17 @@ int __weak spl_mmc_emmc_boot_partition(struct mmc *mmc)
 	return default_spl_mmc_emmc_boot_partition(mmc);
 }
 
+static int spl_mmc_get_mmc_devnum(struct mmc *mmc)
+{
+	struct blk_desc *block_dev;
+#if !CONFIG_IS_ENABLED(BLK)
+	block_dev = &mmc->block_dev;
+#else
+	block_dev = dev_get_uclass_plat(mmc->dev);
+#endif
+	return block_dev->devnum;
+}
+
 int spl_mmc_load(struct spl_image_info *spl_image,
 		 struct spl_boot_device *bootdev,
 		 const char *filename,
@@ -408,9 +419,11 @@ int spl_mmc_load(struct spl_image_info *spl_image,
 	u32 boot_mode;
 	int err = 0;
 	__maybe_unused int part = 0;
+	int mmc_dev;
 
-	/* Perform peripheral init only once */
-	if (!mmc) {
+	/* Perform peripheral init only once for an mmc device */
+	mmc_dev = spl_mmc_get_device_index(bootdev->boot_device);
+	if (!mmc || spl_mmc_get_mmc_devnum(mmc) != mmc_dev) {
 		err = spl_mmc_find_device(&mmc, bootdev->boot_device);
 		if (err)
 			return err;

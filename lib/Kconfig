@@ -71,6 +71,53 @@ config HAVE_PRIVATE_LIBGCC
 config LIB_UUID
 	bool
 
+config SEMIHOSTING
+	bool "Support semihosting"
+	depends on ARM || RISCV
+	help
+	  Semihosting is a method for a target to communicate with a host
+	  debugger. It uses special instructions which the debugger will trap
+	  on and interpret. This allows U-Boot to read/write files, print to
+	  the console, and execute arbitrary commands on the host system.
+
+	  Enabling this option will add support for reading and writing files
+	  on the host system. If you don't have a debugger attached then trying
+	  to do this will likely cause U-Boot to hang. Say 'n' if you are unsure.
+
+config SEMIHOSTING_FALLBACK
+	bool "Recover gracefully when semihosting fails"
+	depends on SEMIHOSTING && (ARM64 || RISCV)
+	default y
+	help
+	  Normally, if U-Boot makes a semihosting call and no debugger is
+	  attached, then it will panic due to a synchronous abort
+	  exception. This config adds an exception handler which will allow
+	  U-Boot to recover. Say 'y' if unsure.
+
+config SPL_SEMIHOSTING
+	bool "Support semihosting in SPL"
+	depends on SPL && (ARM || RISCV)
+	help
+	  Semihosting is a method for a target to communicate with a host
+	  debugger. It uses special instructions which the debugger will trap
+	  on and interpret. This allows U-Boot to read/write files, print to
+	  the console, and execute arbitrary commands on the host system.
+
+	  Enabling this option will add support for reading and writing files
+	  on the host system. If you don't have a debugger attached then trying
+	  to do this will likely cause U-Boot to hang. Say 'n' if you are unsure.
+
+config SPL_SEMIHOSTING_FALLBACK
+	bool "Recover gracefully when semihosting fails in SPL"
+	depends on SPL_SEMIHOSTING && (ARM64 || RISCV)
+	select ARMV8_SPL_EXCEPTION_VECTORS if ARM64
+	default y
+	help
+	  Normally, if U-Boot makes a semihosting call and no debugger is
+	  attached, then it will panic due to a synchronous abort
+	  exception. This config adds an exception handler which will allow
+	  U-Boot to recover. Say 'y' if unsure.
+
 config PRINTF
 	bool
 	default y
@@ -239,6 +286,7 @@ config GENERATE_ACPI_TABLE
 
 config SPL_TINY_MEMSET
 	bool "Use a very small memset() in SPL"
+	depends on SPL
 	help
 	  The faster memset() is the arch-specific one (if available) enabled
 	  by CONFIG_USE_ARCH_MEMSET. If that is not enabled, we can still get
@@ -248,6 +296,7 @@ config SPL_TINY_MEMSET
 
 config TPL_TINY_MEMSET
 	bool "Use a very small memset() in TPL"
+	depends on TPL
 	help
 	  The faster memset() is the arch-specific one (if available) enabled
 	  by CONFIG_USE_ARCH_MEMSET. If that is not enabled, we can still get
@@ -358,6 +407,7 @@ source lib/crypt/Kconfig
 config TPM
 	bool "Trusted Platform Module (TPM) Support"
 	depends on DM
+	imply DM_RNG
 	help
 	  This enables support for TPMs which can be used to provide security
 	  features for your board. The TPM can be connected via LPC or I2C
@@ -556,6 +606,7 @@ config MD5
 
 config SPL_MD5
 	bool "Support MD5 algorithm in SPL"
+	depends on SPL
 	help
 	  This option enables MD5 support in SPL. MD5 is an algorithm designed
 	  in 1991 that produces a 16-byte digest (or checksum) from its input
@@ -642,6 +693,7 @@ config ZSTD
 
 config SPL_LZ4
 	bool "Enable LZ4 decompression support in SPL"
+	depends on SPL
 	help
 	  This enables support for the LZ4 decompression algorithm in SPL. LZ4
 	  is a lossless data compression algorithm that is focused on
@@ -650,6 +702,7 @@ config SPL_LZ4
 
 config SPL_LZMA
 	bool "Enable LZMA decompression support for SPL build"
+	depends on SPL
 	help
 	  This enables support for LZMA compression algorithm for SPL boot.
 
@@ -661,6 +714,7 @@ config VPL_LZMA
 
 config SPL_LZO
 	bool "Enable LZO decompression support in SPL"
+	depends on SPL
 	help
 	  This enables support for LZO compression algorithm in the SPL.
 
@@ -677,6 +731,7 @@ config SPL_ZLIB
 
 config SPL_ZSTD
 	bool "Enable Zstandard decompression support in SPL"
+	depends on SPL
 	select XXHASH
 	help
 	  This enables Zstandard decompression library in the SPL.
@@ -736,6 +791,16 @@ config OF_LIBFDT_OVERLAY
 	help
 	  This enables the FDT library (libfdt) overlay support.
 
+config SYS_FDT_PAD
+	hex "Maximum size of the FDT memory area passeed to the OS"
+	depends on OF_LIBFDT
+	default 0x13000 if FMAN_ENET || QE || U_QE
+	default 0x3000
+	help
+	  During OS boot, we allocate a region of memory within the bootmap
+	  for the FDT. This is the size that we will expand the FDT that we
+	  are using will be extended to be, in bytes.
+
 config SPL_OF_LIBFDT
 	bool "Enable the FDT library for SPL"
 	depends on SPL_LIBGENERIC_SUPPORT
@@ -749,7 +814,7 @@ config SPL_OF_LIBFDT
 
 config SPL_OF_LIBFDT_ASSUME_MASK
 	hex "Mask of conditions to assume for libfdt"
-	depends on SPL_OF_LIBFDT || FIT
+	depends on SPL_OF_LIBFDT || (FIT && SPL)
 	default 0xff
 	help
 	  Use this to change the assumptions made by libfdt in SPL about the
@@ -771,7 +836,7 @@ config TPL_OF_LIBFDT
 
 config TPL_OF_LIBFDT_ASSUME_MASK
 	hex "Mask of conditions to assume for libfdt"
-	depends on TPL_OF_LIBFDT || FIT
+	depends on TPL_OF_LIBFDT || (FIT && TPL)
 	default 0xff
 	help
 	  Use this to change the assumptions made by libfdt in TPL about the
@@ -782,6 +847,7 @@ config TPL_OF_LIBFDT_ASSUME_MASK
 
 config VPL_OF_LIBFDT
 	bool "Enable the FDT library for VPL"
+	depends on VPL
 	default y if VPL_OF_CONTROL && !VPL_OF_PLATDATA
 	help
 	  This enables the FDT library (libfdt). It provides functions for
@@ -792,7 +858,7 @@ config VPL_OF_LIBFDT
 
 config VPL_OF_LIBFDT_ASSUME_MASK
 	hex "Mask of conditions to assume for libfdt"
-	depends on VPL_OF_LIBFDT || FIT
+	depends on VPL_OF_LIBFDT || (FIT && VPL)
 	default 0xff
 	help
 	  Use this to change the assumptions made by libfdt in SPL about the
@@ -958,11 +1024,10 @@ config LMB_RESERVED_REGIONS
 	  Define the number of supported reserved regions in the library logical
 	  memory blocks.
 
-config PHANDLE_CHECK_SEQ
-	bool "Enable phandle check while getting sequence number"
-	help
-	  When there are multiple device tree nodes with same name,
-          enable this config option to distinguish them using
-	  phandles in fdtdec_get_alias_seq() function.
+endmenu
+
+menu "FWU Multi Bank Updates"
+
+source lib/fwu_updates/Kconfig
 
 endmenu

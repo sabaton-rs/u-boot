@@ -49,11 +49,8 @@ void spl_board_init(void)
 	struct udevice *dev;
 	int ret;
 
-	if (IS_ENABLED(CONFIG_FSL_CAAM)) {
-		ret = uclass_get_device_by_driver(UCLASS_MISC, DM_DRIVER_GET(caam_jr), &dev);
-		if (ret)
-			printf("Failed to initialize caam_jr: %d\n", ret);
-	}
+	arch_misc_init();
+
 	puts("Normal Boot\n");
 
 	ret = uclass_get_device_by_name(UCLASS_CLK,
@@ -69,7 +66,7 @@ int power_init_board(void)
 	struct udevice *dev;
 	int ret;
 
-	ret = pmic_get("pca9450@25", &dev);
+	ret = pmic_get("pmic@25", &dev);
 	if (ret == -ENODEV) {
 		puts("No pca9450@25\n");
 		return 0;

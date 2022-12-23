@@ -4,6 +4,7 @@ config IMX8M
 	bool
 	select HAS_CAAM
 	select ROM_UNIFIED_SECTIONS
+	select ARMV8_CRYPTO
 
 config IMX8MQ
 	bool
@@ -69,6 +70,7 @@ config TARGET_IMX8MM_EVK
 
 config TARGET_IMX8MM_ICORE_MX8MM
 	bool "Engicam i.Core MX8M Mini SOM"
+	select BINMAN
 	select IMX8MM
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
@@ -107,6 +109,9 @@ config TARGET_KONTRON_MX8MM
 	select IMX8MM
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
+	select FSL_CAAM
+	select ARCH_MISC_INIT
+	select SPL_CRYPTO if SPL
 
 config TARGET_IMX8MN_BSH_SMM_S2
 	bool "imx8mn-bsh-smm-s2"
@@ -155,6 +160,20 @@ config TARGET_IMX8MP_DH_DHCOM_PDK2
 	select IMX8MP
 	select IMX8M_LPDDR4
 	select SUPPORT_SPL
+
+config TARGET_IMX8MP_ICORE_MX8MP
+	bool "Engicam i.Core MX8M Plus SOM"
+	select BINMAN
+	select IMX8MP
+	select IMX8M_LPDDR4
+	select SUPPORT_SPL
+	help
+	  i.Core MX8M Plus is an EDIMM SOM based on NXP i.MX8MP.
+
+	  i.Core MX8M Plus EDIMM2.2:
+	  * EDIMM2.2 is a Form Factor Capacitive Evaluation Board.
+	  * i.Core MX8M Plus needs to mount on top of EDIMM2.2 for
+	    creating complete i.Core MX8M Plus EDIMM2.2 Starter Kit.
 
 config TARGET_IMX8MP_EVK
 	bool "imx8mp LPDDR4 EVK board"
@@ -265,6 +284,21 @@ config TARGET_IMX8MP_RSB3720A1_6G
 	select IMX8MP
 	select SUPPORT_SPL
 	select IMX8M_LPDDR4
+
+config TARGET_MSC_SM2S_IMX8MP
+	bool "MSC SMARC2 i.MX8MPLUS"
+	select BINMAN
+	select IMX8MP
+	select SUPPORT_SPL
+	select IMX8M_LPDDR4
+
+config TARGET_LIBREM5
+	bool "Purism Librem5 Phone"
+	select BINMAN
+	select IMX8MQ
+	select SUPPORT_SPL
+	select IMX8M_LPDDR4
+
 endchoice
 
 source "board/advantech/imx8mp_rsb3720a1/Kconfig"
@@ -275,6 +309,7 @@ source "board/compulab/imx8mm-cl-iot-gate/Kconfig"
 source "board/data_modul/imx8mm_edm_sbc/Kconfig"
 source "board/dhelectronics/dh_imx8mp/Kconfig"
 source "board/engicam/imx8mm/Kconfig"
+source "board/engicam/imx8mp/Kconfig"
 source "board/freescale/imx8mq_evk/Kconfig"
 source "board/freescale/imx8mm_evk/Kconfig"
 source "board/freescale/imx8mn_evk/Kconfig"
@@ -284,8 +319,10 @@ source "board/google/imx8mq_phanbell/Kconfig"
 source "board/kontron/pitx_imx8m/Kconfig"
 source "board/kontron/sl-mx8mm/Kconfig"
 source "board/menlo/mx8menlo/Kconfig"
+source "board/msc/sm2s_imx8mp/Kconfig"
 source "board/phytec/phycore_imx8mm/Kconfig"
 source "board/phytec/phycore_imx8mp/Kconfig"
+source "board/purism/librem5/Kconfig"
 source "board/ronetix/imx8mq-cm/Kconfig"
 source "board/technexion/pico-imx8mq/Kconfig"
 source "board/variscite/imx8mn_var_som/Kconfig"

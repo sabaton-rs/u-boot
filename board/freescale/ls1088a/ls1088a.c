@@ -4,6 +4,7 @@
  */
 #include <common.h>
 #include <clock_legacy.h>
+#include <display_options.h>
 #include <env.h>
 #include <i2c.h>
 #include <init.h>
@@ -1030,7 +1031,7 @@ int is_flash_available(void)
 #ifdef CONFIG_ENV_IS_IN_SPI_FLASH
 void *env_sf_get_env_addr(void)
 {
-	return (void *)(CONFIG_SYS_FSL_QSPI_BASE + CONFIG_ENV_OFFSET);
+	return (void *)(CFG_SYS_FSL_QSPI_BASE + CONFIG_ENV_OFFSET);
 }
 #endif
 #endif

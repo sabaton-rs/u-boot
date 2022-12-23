@@ -124,19 +124,11 @@
 		 AT91_WDT_MR_WDDIS |				\
 		 AT91_WDT_MR_WDD(0xfff))
 
-/*
- * Hardware drivers
- */
-
-/* LCD */
-#define LCD_BPP				LCD_COLOR8
-
 /* SDRAM */
 #define PHYS_SDRAM				0x20000000
 #define PHYS_SDRAM_SIZE				0x04000000	/* 64 megs */
 
 /* NAND flash */
-#define CONFIG_SYS_MAX_NAND_DEVICE		1
 #define CONFIG_SYS_NAND_BASE			0x40000000
 #define CONFIG_SYS_NAND_DBW_8			1
 /* our ALE is AD22 */
@@ -149,20 +141,11 @@
 /* NOR flash */
 #define PHYS_FLASH_1				0x10000000
 #define CONFIG_SYS_FLASH_BASE			PHYS_FLASH_1
-#define CONFIG_SYS_MAX_FLASH_SECT		256
 
 /* USB */
-#define CONFIG_USB_ATMEL
-#define CONFIG_USB_ATMEL_CLK_SEL_PLLB
-#define CONFIG_USB_OHCI_NEW			1
-#define CONFIG_SYS_USB_OHCI_CPU_INIT		1
 #define CONFIG_SYS_USB_OHCI_REGS_BASE		0x00500000
-#define CONFIG_SYS_USB_OHCI_SLOT_NAME		"at91sam9261"
-#define CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS	2
 
 #define CONFIG_EXTRA_ENV_SETTINGS				\
-	"mtdids=" CONFIG_MTDIDS_DEFAULT "\0"				\
-	"mtdparts=" CONFIG_MTDPARTS_DEFAULT "\0"			\
 	"partition=nand0,0\0"					\
 	"ramargs=setenv bootargs $(bootargs) $(mtdparts)\0"	\
 	"nfsargs=setenv bootargs root=/dev/nfs rw "		\
@@ -179,7 +162,5 @@
 	""
 
 #define CONFIG_SYS_SDRAM_BASE	PHYS_SDRAM
-#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_SDRAM_BASE + 16 * 1024 - \
-				GENERATED_GBL_DATA_SIZE)
 
 #endif

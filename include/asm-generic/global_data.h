@@ -20,6 +20,7 @@
  */
 
 #ifndef __ASSEMBLY__
+#include <cyclic.h>
 #include <event_internal.h>
 #include <fdtdec.h>
 #include <membuff.h>
@@ -67,7 +68,7 @@ struct global_data {
 	 * @mem_clk: memory clock rate in Hz
 	 */
 	unsigned long mem_clk;
-#if defined(CONFIG_LCD) || defined(CONFIG_DM_VIDEO)
+#if defined(CONFIG_VIDEO)
 	/**
 	 * @fb_base: base address of frame buffer memory
 	 */
@@ -115,10 +116,14 @@ struct global_data {
 	/**
 	 * @precon_buf_idx: pre-console buffer index
 	 *
-	 * @precon_buf_idx indicates the current position of the buffer used to
-	 * collect output before the console becomes available
+	 * @precon_buf_idx indicates the current position of the
+	 * buffer used to collect output before the console becomes
+	 * available. When negative, the pre-console buffer is
+	 * temporarily disabled (used when the pre-console buffer is
+	 * being written out, to prevent adding its contents to
+	 * itself).
 	 */
-	unsigned long precon_buf_idx;
+	long precon_buf_idx;
 #endif
 	/**
 	 * @env_addr: address of environment structure
@@ -354,7 +359,7 @@ struct global_data {
 	 */
 	struct membuff console_in;
 #endif
-#ifdef CONFIG_DM_VIDEO
+#ifdef CONFIG_VIDEO
 	/**
 	 * @video_top: top of video frame buffer area
 	 */
@@ -473,6 +478,12 @@ struct global_data {
 	 * @event_state: Points to the current state of events
 	 */
 	struct event_state event_state;
+#endif
+#ifdef CONFIG_CYCLIC
+	/**
+	 * @cyclic_list: list of registered cyclic functions
+	 */
+	struct hlist_head cyclic_list;
 #endif
 	/**
 	 * @dmtag_list: List of DM tags
@@ -624,9 +635,9 @@ enum gd_flags {
 	 */
 	GD_FLG_LOG_READY = 0x10000,
 	/**
-	 * @GD_FLG_WDT_READY: watchdog is ready for use
+	 * @GD_FLG_CYCLIC_RUNNING: cyclic_run is in progress
 	 */
-	GD_FLG_WDT_READY = 0x20000,
+	GD_FLG_CYCLIC_RUNNING = 0x20000,
 	/**
 	 * @GD_FLG_SKIP_LL_INIT: don't perform low-level initialization
 	 */
@@ -635,6 +646,10 @@ enum gd_flags {
 	 * @GD_FLG_SMP_READY: SMP initialization is complete
 	 */
 	GD_FLG_SMP_READY = 0x80000,
+	/**
+	 * @GD_FLG_FDT_CHANGED: Device tree change has been detected by tests
+	 */
+	GD_FLG_FDT_CHANGED = 0x100000,
 };
 
 #endif /* __ASSEMBLY__ */

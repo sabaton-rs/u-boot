@@ -9,12 +9,10 @@
 /*
  * General board configuration
  */
-#define CONFIG_SYS_BOOTM_LEN		(64 * 1024 * 1024)
 
 /*
  * CPU
  */
-#define CONFIG_SYS_MIPS_TIMER_FREQ	30000000
 
 /*
  * PCI
@@ -34,12 +32,6 @@
 /*
  * Console
  */
-
-/*
- * Flash
- */
-
-#define CONFIG_SYS_MAX_FLASH_SECT		1024
 
 /*
  * Environment

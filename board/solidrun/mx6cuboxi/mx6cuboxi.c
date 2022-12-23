@@ -449,15 +449,26 @@ int ft_board_setup(void *fdt, struct bd_info *bd)
 	int node_phy0, node_phy1, node_phy4;
 	int ret, phy;
 	bool enable_phy0 = false, enable_phy1 = false, enable_phy4 = false;
+	enum board_type board;
+
+	// detect device
+	request_detect_gpios();
+	board = board_type();
+	free_detect_gpios();
 
 	// detect phy
 	phy = find_ethernet_phy();
 	if (phy == 0 || phy == 4) {
 		enable_phy0 = true;
-		switch (board_type()) {
+		switch (board) {
+		case HUMMINGBOARD:
+		case HUMMINGBOARD2:
+			/* atheros phy may appear only at address 0 */
+			break;
 		case CUBOXI:
 		case UNKNOWN:
 		default:
+			/* atheros phy may appear at either address 0 or 4 */
 			enable_phy4 = true;
 		}
 	} else if (phy == 1) {
@@ -832,6 +843,9 @@ void board_init_f(ulong dummy)
 
 	/* setup GP timer */
 	timer_init();
+
+	/* Enable device tree and early DM support*/
+	spl_early_init();
 
 	/* UART clocks enabled and gd valid - init serial console */
 	preloader_console_init();

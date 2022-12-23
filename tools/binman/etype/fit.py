@@ -201,7 +201,7 @@ class Entry_fit(Entry_section):
                     os = "U-Boot";
                     arch = "arm64";
                     compression = "none";
-                    load = <CONFIG_SYS_TEXT_BASE>;
+                    load = <CONFIG_TEXT_BASE>;
                     u-boot-nodtb {
                     };
                 };
@@ -658,6 +658,7 @@ class Entry_fit(Entry_section):
         # Build a new tree with all nodes and properties starting from the
         # entry node
         fsw = libfdt.FdtSw()
+        fsw.INC_SIZE = 65536
         fsw.finish_reservemap()
         to_remove = []
         loadables = []

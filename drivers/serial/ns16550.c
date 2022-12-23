@@ -296,7 +296,7 @@ void ns16550_putc(struct ns16550 *com_port, char c)
 	 * in puts().
 	 */
 	if (c == '\n')
-		WATCHDOG_RESET();
+		schedule();
 }
 
 #ifndef CONFIG_NS16550_MIN_FUNCTIONS
@@ -307,7 +307,7 @@ char ns16550_getc(struct ns16550 *com_port)
 		extern void usbtty_poll(void);
 		usbtty_poll();
 #endif
-		WATCHDOG_RESET();
+		schedule();
 	}
 	return serial_in(&com_port->rbr);
 }
@@ -327,6 +327,10 @@ static inline void _debug_uart_init(void)
 {
 	struct ns16550 *com_port = (struct ns16550 *)CONFIG_VAL(DEBUG_UART_BASE);
 	int baud_divisor;
+
+	/* Wait until tx buffer is empty */
+	while (!(serial_din(&com_port->lsr) & UART_LSR_TEMT))
+		;
 
 	/*
 	 * We copy the code from above because it is already horribly messy.
@@ -391,7 +395,7 @@ static int ns16550_serial_putc(struct udevice *dev, const char ch)
 	 * in puts().
 	 */
 	if (ch == '\n')
-		WATCHDOG_RESET();
+		schedule();
 
 	return 0;
 }

@@ -3,6 +3,21 @@
 Develop U-Boot
 ==============
 
+General
+-------
+
+.. toctree::
+   :maxdepth: 1
+
+   codingstyle
+   designprinciples
+   patman
+   process
+   release_cycle
+   security
+   sending_patches
+   system_configuration
+
 Implementation
 --------------
 
@@ -14,6 +29,7 @@ Implementation
    ci_testing
    commands
    config_binding
+   cyclic
    devicetree/index
    distro
    driver-model/index
@@ -27,6 +43,7 @@ Implementation
    smbios
    spl
    uefi/index
+   vbe
    version
 
 Debugging

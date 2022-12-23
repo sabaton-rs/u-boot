@@ -35,6 +35,18 @@ static void *image_addr;
 static size_t image_size;
 
 /**
+ * efi_get_image_parameters() - return image parameters
+ *
+ * @img_addr:		address of loaded image in memory
+ * @img_size:		size of loaded image
+ */
+void efi_get_image_parameters(void **img_addr, size_t *img_size)
+{
+	*img_addr = image_addr;
+	*img_size = image_size;
+}
+
+/**
  * efi_clear_bootdev() - clear boot device
  */
 static void efi_clear_bootdev(void)
@@ -107,9 +119,9 @@ void efi_set_bootdev(const char *dev, const char *devnr, const char *path,
 			efi_free_pool(image_tmp);
 		}
 		bootefi_image_path = image;
-		log_debug("- recorded device %ls\n", efi_dp_str(device));
+		log_debug("- boot device %pD\n", device);
 		if (image)
-			log_debug("- and image %ls\n", efi_dp_str(image));
+			log_debug("- image %pD\n", image);
 	} else {
 		log_debug("- efi_dp_from_name() failed, err=%lx\n", ret);
 		efi_clear_bootdev();
@@ -269,7 +281,7 @@ efi_status_t efi_install_fdt(void *fdt)
 		return EFI_SUCCESS;
 	}
 #else
-	bootm_headers_t img = { 0 };
+	struct bootm_headers img = { 0 };
 	efi_status_t ret;
 
 	if (fdt == EFI_FDT_USE_INTERNAL) {
@@ -382,8 +394,10 @@ static efi_status_t do_bootefi_exec(efi_handle_t handle, void *load_options)
 out:
 	free(load_options);
 
-	if (IS_ENABLED(CONFIG_EFI_LOAD_FILE2_INITRD))
-		efi_initrd_deregister();
+	if (IS_ENABLED(CONFIG_EFI_LOAD_FILE2_INITRD)) {
+		if (efi_initrd_deregister() != EFI_SUCCESS)
+			log_err("Failed to remove loadfile2 for initrd\n");
+	}
 
 	/* Control is returned to U-Boot, disable EFI watchdog */
 	efi_set_watchdog(0);
@@ -480,7 +494,7 @@ efi_status_t efi_run_image(void *source_buffer, efi_uintn_t source_size)
 	efi_handle_t mem_handle = NULL, handle;
 	struct efi_device_path *file_path = NULL;
 	struct efi_device_path *msg_path;
-	efi_status_t ret;
+	efi_status_t ret, ret2;
 	u16 *load_options;
 
 	if (!bootefi_device_path || !bootefi_image_path) {
@@ -497,12 +511,9 @@ efi_status_t efi_run_image(void *source_buffer, efi_uintn_t source_size)
 		 * Make sure that device for device_path exist
 		 * in load_image(). Otherwise, shell and grub will fail.
 		 */
-		ret = efi_create_handle(&mem_handle);
-		if (ret != EFI_SUCCESS)
-			goto out;
-
-		ret = efi_add_protocol(mem_handle, &efi_guid_device_path,
-				       file_path);
+		ret = efi_install_multiple_protocol_interfaces(&mem_handle,
+							       &efi_guid_device_path,
+							       file_path, NULL);
 		if (ret != EFI_SUCCESS)
 			goto out;
 		msg_path = file_path;
@@ -530,9 +541,11 @@ efi_status_t efi_run_image(void *source_buffer, efi_uintn_t source_size)
 	ret = do_bootefi_exec(handle, load_options);
 
 out:
-	efi_delete_handle(mem_handle);
+	ret2 = efi_uninstall_multiple_protocol_interfaces(mem_handle,
+							  &efi_guid_device_path,
+							  file_path, NULL);
 	efi_free_pool(file_path);
-	return ret;
+	return (ret != EFI_SUCCESS) ? ret : ret2;
 }
 
 #ifdef CONFIG_CMD_BOOTEFI_SELFTEST

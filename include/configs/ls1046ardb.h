@@ -9,18 +9,14 @@
 
 #include "ls1046a_common.h"
 
-#define CONFIG_LAYERSCAPE_NS_ACCESS
-
 /* Physical Memory Map */
 
 #define SPD_EEPROM_ADDRESS		0x51
-#define CONFIG_SYS_SPD_BUS_NUM		0
 
 #define CONFIG_MEM_INIT_VALUE           0xdeadbeef
 
 #if defined(CONFIG_QSPI_BOOT)
 #define CONFIG_SYS_UBOOT_BASE		0x40100000
-#define CONFIG_SYS_SPL_ARGS_ADDR	0x90000000
 #endif
 
 #define CONFIG_SYS_NAND_BASE		0x7e800000
@@ -54,7 +50,6 @@
 #define CONFIG_SYS_NAND_FTIM3		0x0
 
 #define CONFIG_SYS_NAND_BASE_LIST	{ CONFIG_SYS_NAND_BASE }
-#define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define CONFIG_MTD_NAND_VERIFY_WRITE
 
 /*
@@ -102,8 +97,6 @@
 #define CONFIG_SYS_CS2_FTIM3		CONFIG_SYS_CPLD_FTIM3
 
 /* EEPROM */
-#define CONFIG_SYS_I2C_EEPROM_NXID
-#define CONFIG_SYS_EEPROM_BUS_NUM		0
 #define I2C_RETIMER_ADDR			0x18
 
 /* PMIC */
@@ -111,7 +104,7 @@
 /*
  * Environment
  */
-#define CONFIG_SYS_FSL_QSPI_BASE        0x40000000
+#define CFG_SYS_FSL_QSPI_BASE        0x40000000
 
 #define AQR105_IRQ_MASK			0x80000000
 /* FMan */
@@ -138,8 +131,6 @@
 			   "env exists secureboot && esbc_halt;"
 #endif
 #endif
-
-#define CONFIG_SPL_FS_LOAD_PAYLOAD_NAME "u-boot.img"
 
 #include <asm/fsl_secure_boot.h>
 

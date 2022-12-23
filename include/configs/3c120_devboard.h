@@ -19,8 +19,6 @@
 /*
  * CFI Flash
  */
-#define CONFIG_SYS_CFI_FLASH_STATUS_POLL /* fix amd flash issue */
-#define CONFIG_SYS_MAX_FLASH_SECT	512
 
 /*
  * MEMORY ORGANIZATION
@@ -31,6 +29,5 @@
 #define CONFIG_SYS_SDRAM_BASE		0xD0000000
 #define CONFIG_SYS_SDRAM_SIZE		0x08000000
 #define CONFIG_MONITOR_IS_IN_RAM
-#define CONFIG_SYS_MONITOR_LEN		0x80000	/* Reserve 512k */
 
 #endif /* __CONFIG_H */

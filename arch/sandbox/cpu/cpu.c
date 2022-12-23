@@ -3,19 +3,22 @@
  * Copyright (c) 2011 The Chromium OS Authors.
  */
 
+#define LOG_CATEGORY	LOGC_SANDBOX
+
 #include <common.h>
 #include <bootstage.h>
 #include <cpu_func.h>
 #include <errno.h>
 #include <log.h>
-#include <asm/global_data.h>
-#include <linux/delay.h>
-#include <linux/libfdt.h>
 #include <os.h>
+#include <asm/global_data.h>
 #include <asm/io.h>
 #include <asm/malloc.h>
 #include <asm/setjmp.h>
 #include <asm/state.h>
+#include <dm/ofnode.h>
+#include <linux/delay.h>
+#include <linux/libfdt.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -331,27 +334,27 @@ void *board_fdt_blob_setup(int *ret)
 		err = setup_auto_tree(blob);
 		if (!err)
 			goto done;
-		printf("Unable to create empty FDT: %s\n", fdt_strerror(err));
+		os_printf("Unable to create empty FDT: %s\n", fdt_strerror(err));
 		*ret = -EINVAL;
 		goto fail;
 	}
 
 	err = os_get_filesize(fname, &size);
 	if (err < 0) {
-		printf("Failed to find FDT file '%s'\n", fname);
+		os_printf("Failed to find FDT file '%s'\n", fname);
 		*ret = err;
 		goto fail;
 	}
 	fd = os_open(fname, OS_O_RDONLY);
 	if (fd < 0) {
-		printf("Failed to open FDT file '%s'\n", fname);
+		os_printf("Failed to open FDT file '%s'\n", fname);
 		*ret = -EACCES;
 		goto fail;
 	}
 
 	if (os_read(fd, blob, size) != size) {
 		os_close(fd);
-		printf("Failed to read FDT file '%s'\n", fname);
+		os_printf("Failed to read FDT file '%s'\n", fname);
 		*ret =  -EIO;
 		goto fail;
 	}
@@ -372,4 +375,29 @@ ulong timer_get_boot_us(void)
 		base_count = count;
 
 	return (count - base_count) / 1000;
+}
+
+int sandbox_load_other_fdt(void **fdtp, int *sizep)
+{
+	const char *orig;
+	int ret, size;
+	void *fdt = *fdtp;
+
+	ret = state_load_other_fdt(&orig, &size);
+	if (ret) {
+		log_err("Cannot read other FDT\n");
+		return log_msg_ret("ld", ret);
+	}
+
+	if (!*fdtp) {
+		fdt = os_malloc(size);
+		if (!fdt)
+			return log_msg_ret("mem", -ENOMEM);
+		*sizep = size;
+	}
+
+	memcpy(fdt, orig, *sizep);
+	*fdtp = fdt;
+
+	return 0;
 }

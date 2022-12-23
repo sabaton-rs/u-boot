@@ -24,7 +24,7 @@ config SPL_PARTITIONS
 	select SPL_STRTO
 	help
 	  Enable this for base partition support in SPL. The required
-	  partition table types shold be enabled separately. This add a
+	  partition table types shold be enabled separately. This adds a
 	  small amount of size to SPL, typically 500 bytes.
 
 config TPL_PARTITIONS
@@ -32,9 +32,9 @@ config TPL_PARTITIONS
 	select TPL_SPRINTF
 	select TPL_STRTO
 	help
-	  Enable this for base partition support in SPL. The required
-	  partition table types shold be enabled separately. This add a
-	  small amount of size to SPL, typically 500 bytes.
+	  Enable this for base partition support in TPL. The required
+	  partition table types shold be enabled separately. This adds a
+	  small amount of size to TPL, typically 500 bytes.
 
 config MAC_PARTITION
 	bool "Enable Apple's MacOS partition table"
@@ -60,6 +60,7 @@ config DOS_PARTITION
 config SPL_DOS_PARTITION
 	bool "Enable MS Dos partition table for SPL"
 	depends on SPL
+	default n if ARCH_MVEBU
 	default n if ARCH_SUNXI
 	default y if DOS_PARTITION
 	select SPL_PARTITIONS
@@ -130,6 +131,7 @@ config EFI_PARTITION_ENTRIES_OFF
 config SPL_EFI_PARTITION
 	bool "Enable EFI GPT partition table for SPL"
 	depends on  SPL
+	default n if ARCH_MVEBU
 	default n if ARCH_SUNXI
 	default y if EFI_PARTITION
 	select SPL_PARTITIONS

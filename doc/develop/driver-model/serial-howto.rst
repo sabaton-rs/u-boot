@@ -3,15 +3,6 @@
 How to port a serial driver to driver model
 ===========================================
 
-Almost all of the serial drivers have been converted as at January 2016. These
-ones remain:
-
-   * serial_bfin.c
-   * serial_pxa.c
-
-The deadline for this work was the end of January 2016. If no one steps
-forward to convert these, at some point there may come a patch to remove them!
-
 Here is a suggested approach for converting your serial driver over to driver
 model. Please feel free to update this file with your ideas and suggestions.
 
@@ -71,7 +62,7 @@ what you need. U-Boot automatically includes these files: see :ref:`dttweaks`.
 Here are some things you might need to consider:
 
 1. The serial driver itself needs to be present before relocation, so that the
-   U-Boot banner appears. Make sure it has a u-boot,pre-reloc tag in the device
+   U-Boot banner appears. Make sure it has a u-boot,dm-pre-reloc tag in the device
    tree, so that the serial driver is bound when U-Boot starts.
 
    For example, on iMX8::
@@ -88,7 +79,7 @@ Here are some things you might need to consider:
        };
 
 2. If your serial port requires a particular pinmux configuration, you may need
-   a pinctrl driver. This needs to have a u-boot,pre-reloc tag also. Take care
+   a pinctrl driver. This needs to have a u-boot,dm-pre-reloc tag also. Take care
    that any subnodes have the same tag, if they are needed to make the correct
    pinctrl available.
 

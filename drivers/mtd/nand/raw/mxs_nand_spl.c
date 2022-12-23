@@ -29,8 +29,20 @@ static void mxs_nand_command(struct mtd_info *mtd, unsigned int command,
 
 	/* Serially input address */
 	if (column != -1) {
+		/* Adjust columns for 16 bit buswidth */
+		if (chip->options & NAND_BUSWIDTH_16 &&
+				!nand_opcode_8bits(command))
+			column >>= 1;
 		chip->cmd_ctrl(mtd, column, NAND_ALE);
-		chip->cmd_ctrl(mtd, column >> 8, NAND_ALE);
+
+		/*
+		 * Assume LP NAND here, so use two bytes column address
+		 * but not for CMD_READID and CMD_PARAM, which require
+		 * only one byte column address
+		 */
+		if (command != NAND_CMD_READID &&
+			command != NAND_CMD_PARAM)
+			chip->cmd_ctrl(mtd, column >> 8, NAND_ALE);
 	}
 	if (page_addr != -1) {
 		chip->cmd_ctrl(mtd, page_addr, NAND_ALE);
@@ -69,13 +81,13 @@ static int mxs_flash_full_ident(struct mtd_info *mtd)
 {
 	int nand_maf_id, nand_dev_id;
 	struct nand_chip *chip = mtd_to_nand(mtd);
-	struct nand_flash_dev *type;
+	int ret;
 
-	type = nand_get_flash_type(mtd, chip, &nand_maf_id, &nand_dev_id, NULL);
+	ret = nand_detect(chip, &nand_maf_id, &nand_dev_id, NULL);
 
-	if (IS_ERR(type)) {
+	if (ret) {
 		chip->select_chip(mtd, -1);
-		return PTR_ERR(type);
+		return ret;
 	}
 
 	return 0;
@@ -245,7 +257,7 @@ int nand_spl_load_image(uint32_t offs, unsigned int size, void *dst)
 	while (block <= lastblock && size > 0) {
 		if (!is_badblock(mtd, mtd->erasesize * block, 1)) {
 			/* Skip bad blocks */
-			while (page < nand_page_per_block) {
+			while (page < nand_page_per_block && size) {
 				int curr_page = nand_page_per_block * block + page;
 
 				if (mxs_read_page_ecc(mtd, page_buf, curr_page) < 0) {

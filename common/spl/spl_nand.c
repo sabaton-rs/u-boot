@@ -56,6 +56,21 @@ static ulong spl_nand_fit_read(struct spl_load_info *load, ulong offs,
 	return size / load->bl_len;
 }
 
+static ulong spl_nand_legacy_read(struct spl_load_info *load, ulong offs,
+				  ulong size, void *dst)
+{
+	int err;
+
+	debug("%s: offs %lx, size %lx, dst %p\n",
+	      __func__, offs, size, dst);
+
+	err = nand_spl_load_image(offs, size, dst);
+	if (err)
+		return 0;
+
+	return size;
+}
+
 struct mtd_info * __weak nand_get_mtd(void)
 {
 	return NULL;
@@ -63,7 +78,7 @@ struct mtd_info * __weak nand_get_mtd(void)
 
 static int spl_nand_load_element(struct spl_image_info *spl_image,
 				 struct spl_boot_device *bootdev,
-				 int offset, struct image_header *header)
+				 int offset, struct legacy_img_hdr *header)
 {
 	struct mtd_info *mtd = nand_get_mtd();
 	int bl_len = mtd ? mtd->writesize : 1;
@@ -93,6 +108,18 @@ static int spl_nand_load_element(struct spl_image_info *spl_image,
 		load.bl_len = bl_len;
 		load.read = spl_nand_fit_read;
 		return spl_load_imx_container(spl_image, &load, offset / bl_len);
+	} else if (IS_ENABLED(CONFIG_SPL_LEGACY_IMAGE_FORMAT) &&
+		   image_get_magic(header) == IH_MAGIC) {
+		struct spl_load_info load;
+
+		debug("Found legacy image\n");
+		load.dev = NULL;
+		load.priv = NULL;
+		load.filename = NULL;
+		load.bl_len = 1;
+		load.read = spl_nand_legacy_read;
+
+		return spl_load_legacy_img(spl_image, bootdev, &load, offset, header);
 	} else {
 		err = spl_parse_image_header(spl_image, bootdev, header);
 		if (err)
@@ -106,7 +133,7 @@ static int spl_nand_load_image(struct spl_image_info *spl_image,
 			       struct spl_boot_device *bootdev)
 {
 	int err;
-	struct image_header *header;
+	struct legacy_img_hdr *header;
 	int *src __attribute__((unused));
 	int *dst __attribute__((unused));
 
@@ -130,11 +157,11 @@ static int spl_nand_load_image(struct spl_image_info *spl_image,
 		 */
 		nand_spl_load_image(CONFIG_CMD_SPL_NAND_OFS,
 			CONFIG_CMD_SPL_WRITE_SIZE,
-			(void *)CONFIG_SYS_TEXT_BASE);
+			(void *)CONFIG_TEXT_BASE);
 		/* copy to destintion */
 		for (dst = (int *)CONFIG_SYS_SPL_ARGS_ADDR,
-				src = (int *)CONFIG_SYS_TEXT_BASE;
-				src < (int *)(CONFIG_SYS_TEXT_BASE +
+				src = (int *)CONFIG_TEXT_BASE;
+				src < (int *)(CONFIG_TEXT_BASE +
 				CONFIG_CMD_SPL_WRITE_SIZE);
 				src++, dst++) {
 			writel(readl(src), dst);

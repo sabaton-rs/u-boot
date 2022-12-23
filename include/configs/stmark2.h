@@ -34,24 +34,11 @@
 		"sf write ${loadaddr} 0x00800000 ${filesize}\0"	\
 	""
 
-/* Realtime clock */
-#define CONFIG_RTC_MCFRRTC
-#define CONFIG_SYS_MCFRRTC_BASE		0xFC0A8000
-
 #define CONFIG_SYS_SBFHDR_SIZE		0x7
 
 /* Input, PCI, Flexbus, and VCO */
-#define CONFIG_EXTRA_CLOCK
 
 #define CONFIG_PRAM			2048	/* 2048 KB */
-#define CONFIG_SYS_CBSIZE		256	/* Console I/O Buffer Size */
-
-/* Print Buffer Size */
-#define CONFIG_SYS_PBSIZE		(CONFIG_SYS_CBSIZE + \
-					sizeof(CONFIG_SYS_PROMPT) + 16)
-#define CONFIG_SYS_MAXARGS		16
-/* Boot Argument Buffer Size    */
-#define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE
 
 #define CONFIG_SYS_MBAR			0xFC000000
 
@@ -62,9 +49,8 @@
 /* End of used area in internal SRAM */
 #define CONFIG_SYS_INIT_RAM_SIZE	0x10000
 #define CONFIG_SYS_INIT_RAM_CTRL	0x221
-#define CONFIG_SYS_GBL_DATA_OFFSET	((CONFIG_SYS_INIT_RAM_SIZE - \
+#define CONFIG_SYS_INIT_SP_OFFSET	((CONFIG_SYS_INIT_RAM_SIZE - \
 					GENERATED_GBL_DATA_SIZE) - 32)
-#define CONFIG_SYS_INIT_SP_OFFSET	CONFIG_SYS_GBL_DATA_OFFSET
 #define CONFIG_SYS_SBFHDR_DATA_OFFSET	(CONFIG_SYS_INIT_RAM_SIZE - 32)
 
 /*
@@ -81,9 +67,7 @@
 #define CONFIG_SERIAL_BOOT
 #endif
 
-#define CONFIG_SYS_BOOTPARAMS_LEN	(64 * 1024)
 /* Reserve 256 kB for Monitor */
-#define CONFIG_SYS_MONITOR_LEN		(256 << 10)
 
 /*
  * For booting Linux, the board info and command line data
@@ -117,12 +101,4 @@
 #define CACR_STATUS			(CONFIG_SYS_INIT_RAM_ADDR + \
 					CONFIG_SYS_INIT_RAM_SIZE - 12)
 
-#ifdef CONFIG_MCFFEC
-#define CONFIG_SYS_DISCOVER_PHY
-/* If CONFIG_SYS_DISCOVER_PHY is not defined - hardcoded */
-#ifndef CONFIG_SYS_DISCOVER_PHY
-#define FECDUPLEX			FULL
-#define FECSPEED			_100BASET
-#endif /* CONFIG_SYS_DISCOVER_PHY */
-#endif
 #endif /* __STMARK2_CONFIG_H */

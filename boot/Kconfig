@@ -210,8 +210,8 @@ config SPL_LOAD_FIT
 	  1. "loadables" images, other than FDTs, which do not have a "load"
 	     property will not be loaded. This limitation also applies to FPGA
 	     images with the correct "compatible" string.
-	  2. For FPGA images, only the "compatible" = "u-boot,fpga-legacy"
-	     loading method is supported.
+	  2. For FPGA images, the supported "compatible" list is in the
+	     doc/uImage.FIT/source_file_format.txt.
 	  3. FDTs are only loaded for images with an "os" property of "u-boot".
 	     "linux" images are also supported with Falcon boot mode.
 
@@ -292,7 +292,63 @@ config SPL_FIT_GENERATOR
 
 endif # SPL
 
+if VPL
+
+config VPL_FIT
+	bool "Support Flattened Image Tree within VPL"
+	depends on VPL
+	default y
+	select VPL_HASH
+	select VPL_OF_LIBFDT
+
+config VPL_FIT_PRINT
+	bool "Support FIT printing within VPL"
+	depends on VPL_FIT
+	default y
+	help
+	  Support printing the content of the fitImage in a verbose manner in VPL.
+
+config VPL_FIT_FULL_CHECK
+	bool "Do a full check of the FIT before using it"
+	default y
+	help
+	  Enable this do a full check of the FIT to make sure it is valid. This
+	  helps to protect against carefully crafted FITs which take advantage
+	  of bugs or omissions in the code. This includes a bad structure,
+	  multiple root nodes and the like.
+
+config VPL_FIT_SIGNATURE
+	bool "Enable signature verification of FIT firmware within VPL"
+	depends on VPL_DM
+	default y
+	select FIT_SIGNATURE
+	select VPL_FIT
+	select VPL_CRYPTO
+	select VPL_HASH
+	imply VPL_RSA
+	imply VPL_RSA_VERIFY
+	select VPL_IMAGE_SIGN_INFO
+	select VPL_FIT_FULL_CHECK
+
+config VPL_FIT_SIGNATURE_MAX_SIZE
+	hex "Max size of signed FIT structures in VPL"
+	depends on VPL_FIT_SIGNATURE
+	default 0x10000000
+	help
+	  This option sets a max size in bytes for verified FIT uImages.
+	  A sane value of 256MB protects corrupted DTB structures from overlapping
+	  device memory. Assure this size does not extend past expected storage
+	  space.
+
+endif # VPL
+
 endif # FIT
+
+config PXE_UTILS
+	bool
+	select MENU
+	help
+	  Utilities for parsing PXE file formats.
 
 config BOOTSTD
 	bool "Standard boot support"
@@ -328,6 +384,26 @@ config BOOTSTD_FULL
 	  - support for selecting the ordering of bootdevs using the devicetree
 	    as well as the "boot_targets" environment variable
 
+config SPL_BOOTSTD
+	bool "Standard boot support in VPL"
+	depends on SPL && SPL_DM && SPL_OF_CONTROL && SPL_BLK
+	default y if VPL
+	help
+	  This enables standard boot in SPL. This is neeeded so that VBE
+	  (Verified Boot for Embedded) can be used, since it depends on standard
+	  boot. It is enabled by default since the main purpose of VPL is to
+	  handle the firmware part of VBE.
+
+config VPL_BOOTSTD
+	bool "Standard boot support in VPL"
+	depends on VPL && VPL_DM && VPL_OF_CONTROL && VPL_BLK
+	default y
+	help
+	  This enables standard boot in SPL. This is neeeded so that VBE
+	  (Verified Boot for Embedded) can be used, since it depends on standard
+	  boot. It is enabled by default since the main purpose of VPL is to
+	  handle the firmware part of VBE.
+
 if BOOTSTD
 
 config BOOTSTD_BOOTCOMMAND
@@ -343,9 +419,16 @@ config BOOTSTD_BOOTCOMMAND
 	  standard boot does not support all of the features of distro boot
 	  yet.
 
+config BOOTMETH_GLOBAL
+	bool
+	help
+	  Add support for global bootmeths. This feature is used by VBE and
+	  EFI bootmgr, since they take full control over which bootdevs are
+	  selected to boot.
+
 config BOOTMETH_DISTRO
 	bool "Bootdev support for distro boot"
-	depends on CMD_PXE
+	select PXE_UTILS
 	default y
 	help
 	  Enables support for distro boot using bootdevs. This makes the
@@ -384,6 +467,94 @@ config BOOTMETH_EFILOADER
 	     riscv64   - RISC-V 64-bit
 
 	  This provides a way to try out standard boot on an existing boot flow.
+
+config BOOTMETH_VBE
+	bool "Bootdev support for Verified Boot for Embedded"
+	depends on FIT
+	default y
+	select BOOTMETH_GLOBAL
+	help
+	  Enables support for VBE boot. This is a standard boot method which
+	  supports selection of various firmware components, seleciton of an OS to
+	  boot as well as updating these using fwupd.
+
+config SPL_BOOTMETH_VBE
+	bool "Bootdev support for Verified Boot for Embedded (SPL)"
+	depends on SPL && FIT
+	default y if VPL
+	help
+	  Enables support for VBE boot. This is a standard boot method which
+	  supports selection of various firmware components, seleciton of an OS to
+	  boot as well as updating these using fwupd.
+
+config VPL_BOOTMETH_VBE
+	bool "Bootdev support for Verified Boot for Embedded (VPL)"
+	depends on VPL && FIT
+	default y
+	help
+	  Enables support for VBE boot. This is a standard boot method which
+	  supports selection of various firmware components, seleciton of an OS to
+	  boot as well as updating these using fwupd.
+
+if BOOTMETH_VBE
+
+config BOOTMETH_VBE_SIMPLE
+	bool "Bootdev support for VBE 'simple' method"
+	default y
+	help
+	  Enables support for VBE 'simple' boot. This allows updating a single
+	  firmware image in boot media such as MMC. It does not support any sort
+	  of rollback, recovery or A/B boot.
+
+config BOOTMETH_VBE_SIMPLE_OS
+	bool "Bootdev support for VBE 'simple' method OS phase"
+	default y
+	help
+	  Enables support for the OS parts of VBE 'simple' boot. This includes
+	  fixing up the device tree with the required VBE information, ready
+	  for booting into the OS. This option is only enabled for U-Boot
+	  proper, since it is the phase where device tree fixups happen.
+
+config SPL_BOOTMETH_VBE_SIMPLE
+	bool "Bootdev support for VBE 'simple' method (SPL)"
+	depends on SPL
+	default y if VPL
+	help
+	  Enables support for VBE 'simple' boot. This allows updating a single
+	  firmware image in boot media such as MMC. It does not support any sort
+	  of rollback, recovery or A/B boot.
+
+config VPL_BOOTMETH_VBE_SIMPLE
+	bool "Bootdev support for VBE 'simple' method (VPL)"
+	depends on VPL
+	default y
+	help
+	  Enables support for VBE 'simple' boot. This allows updating a single
+	  firmware image in boot media such as MMC. It does not support any sort
+	  of rollback, recovery or A/B boot.
+
+config SPL_BOOTMETH_VBE_SIMPLE_FW
+	bool "Bootdev support for VBE 'simple' method firmware phase (SPL)"
+	depends on VPL
+	default y
+	help
+	  Enables support for the firmware parts of VBE 'simple' boot. This
+	  includes an SPL loader which locates the correct U-Boot to boot into.
+	  This option should really only be enabled for VPL, since it is the
+	  phase where the SPL + U-Boot decision should be made. But for now,
+	  SPL does its own FIT-configuration selection.
+
+config VPL_BOOTMETH_VBE_SIMPLE_FW
+	bool "Bootdev support for VBE 'simple' method firmware phase (VPL)"
+	depends on VPL
+	default y
+	help
+	  Enables support for the firmware parts of VBE 'simple' boot. This
+	  includes an SPL loader which locates the correct SPL to boot into.
+	  This option enabled for VPL, since it is the phase where the SPL
+	  decision is made.
+
+endif # BOOTMETH_VBE
 
 config BOOTMETH_SANDBOX
 	def_bool y
@@ -452,33 +623,20 @@ config OF_STDOUT_VIA_ALIAS
 	  incorrect when used with device tree as this option does not
 	  exist / should not be used.
 
-config SYS_EXTRA_OPTIONS
-	string "Extra Options (DEPRECATED)"
-	help
-	  The old configuration infrastructure (= mkconfig + boards.cfg)
-	  provided the extra options field. If you have something like
-	  "HAS_BAR,BAZ=64", the optional options
-	    #define CONFIG_HAS
-	    #define CONFIG_BAZ	64
-	  will be defined in include/config.h.
-	  This option was prepared for the smooth migration from the old
-	  configuration to Kconfig. Since this option will be removed sometime,
-	  new boards should not use this option.
-
-config HAVE_SYS_TEXT_BASE
+config HAVE_TEXT_BASE
 	bool
 	depends on !NIOS2 && !XTENSA
 	depends on !EFI_APP
 	default y
 
-config SYS_TEXT_BASE
-	depends on HAVE_SYS_TEXT_BASE
+config TEXT_BASE
+	depends on HAVE_TEXT_BASE
 	default 0x0 if POSITION_INDEPENDENT
 	default 0x80800000 if ARCH_OMAP2PLUS || ARCH_K3
 	default 0x81700000 if MACH_SUNIV
 	default 0x2a000000 if MACH_SUN9I
-	default 0x42e00000 if MACH_SUN8I_V3S
-	default 0x4a000000 if ARCH_SUNXI
+	default 0x4a000000 if SUNXI_MINIMUM_DRAM_MB >= 256
+	default 0x42e00000 if SUNXI_MINIMUM_DRAM_MB >= 64
 	hex "Text Base"
 	help
 	  The address in memory that U-Boot will be running from, initially.
@@ -486,17 +644,17 @@ config SYS_TEXT_BASE
 config HAVE_SYS_MONITOR_BASE
 	bool
 	depends on ARC || MIPS || M68K || NIOS2 || PPC || XTENSA || X86 \
-		|| FLASH_PIC32 || ENV_IS_IN_FLASH || MTD_NOR_FLASH
+		|| ENV_IS_IN_FLASH || MTD_NOR_FLASH
 	depends on !EFI_APP
 	default y
 
 config SYS_MONITOR_BASE
 	depends on HAVE_SYS_MONITOR_BASE
 	hex "Physical start address of boot monitor code"
-	default SYS_TEXT_BASE
+	default TEXT_BASE
 	help
 	  The physical start address of boot monitor code (which is the same as
-	  CONFIG_SYS_TEXT_BASE when linking) and the same as CONFIG_SYS_FLASH_BASE
+	  CONFIG_TEXT_BASE when linking) and the same as CONFIG_SYS_FLASH_BASE
 	  when booting from flash.
 
 config SPL_SYS_MONITOR_BASE
@@ -555,8 +713,12 @@ config CHROMEOS_VBOOT
 	  distinguishing between booting Chrome OS in a basic way (developer
 	  mode) and a full boot.
 
+config SYS_RAMBOOT
+	bool
+
 config RAMBOOT_PBL
 	bool "Freescale PBL(pre-boot loader) image format support"
+	select SYS_RAMBOOT if PPC
 	help
 	  Some SoCs use PBL to load RCW and/or pre-initialization instructions.
 	  For more details refer to doc/README.pblimage
@@ -575,6 +737,19 @@ config SPIFLASH
 
 endchoice
 
+config FSL_FIXED_MMC_LOCATION
+	bool "PBL MMC is at a fixed location"
+	depends on SDCARD && !RAMBOOT_PBL
+
+config ESDHC_HC_BLK_ADDR
+	def_bool y
+	depends on FSL_FIXED_MMC_LOCATION && (ARCH_BSC9131 || ARCH_BSC9132 || ARCH_P1010)
+	help
+	  In High Capacity SD Cards (> 2 GBytes), the 32-bit source address and
+	  code length of these soc specify the memory address in block address
+	  format. Block length is fixed to 512 bytes as per the SD High
+	  Capacity specification.
+
 config SYS_FSL_PBL_PBI
 	string "PBI(pre-boot instructions) commands for the PBL image"
 	depends on RAMBOOT_PBL
@@ -588,6 +763,14 @@ config SYS_FSL_PBL_RCW
 	help
 	  Enables addition of RCW (Power on reset configuration) in built image.
 	  Please refer doc/README.pblimage for more details.
+
+config SYS_BOOT_RAMDISK_HIGH
+	depends on CMD_BOOTM || CMD_BOOTI || CMD_BOOTZ
+	depends on !(NIOS2 || SANDBOX || SH || XTENSA)
+	def_bool y
+	help
+	  Enable initrd_high functionality.  If defined then the initrd_high
+	  feature is enabled and the boot* ramdisk subcommand is enabled.
 
 endmenu		# Boot images
 
@@ -613,7 +796,7 @@ config BOOTSTAGE
 
 config SPL_BOOTSTAGE
 	bool "Boot timing and reported in SPL"
-	depends on BOOTSTAGE
+	depends on BOOTSTAGE && SPL
 	help
 	  Enable recording of boot time in SPL. To make this visible to U-Boot
 	  proper, enable BOOTSTAGE_STASH as well. This will stash the timing
@@ -622,7 +805,7 @@ config SPL_BOOTSTAGE
 
 config TPL_BOOTSTAGE
 	bool "Boot timing and reported in TPL"
-	depends on BOOTSTAGE
+	depends on BOOTSTAGE && TPL
 	help
 	  Enable recording of boot time in SPL. To make this visible to U-Boot
 	  proper, enable BOOTSTAGE_STASH as well. This will stash the timing
@@ -1308,6 +1491,10 @@ config PREBOOT
 	default ""
 	help
 	  This is the default of "preboot" environment variable.
+
+config PREBOOT_DEFINED
+	bool
+	default y if PREBOOT != ""
 
 config DEFAULT_FDT_FILE
 	string "Default fdt file"

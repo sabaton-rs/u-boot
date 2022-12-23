@@ -9,6 +9,7 @@
 #include <asm/io.h>
 #include <asm/mach-imx/boot_mode.h>
 #include <dm.h>
+#include <dm/device-internal.h>
 #include <i2c_eeprom.h>
 #include <malloc.h>
 #include <net.h>
@@ -31,22 +32,6 @@ int board_phys_sdram_size(phys_size_t *size)
 	*size = (4ULL >> ((memcfg >> 1) & 0x3)) * SZ_1G;
 
 	return 0;
-}
-
-/* IMX8M SNVS registers needed for the bootcount functionality */
-#define SNVS_BASE_ADDR			0x30370000
-#define SNVS_LPSR			0x4c
-#define SNVS_LPLVDR			0x64
-#define SNVS_LPPGDR_INIT		0x41736166
-
-static void setup_snvs(void)
-{
-	/* Enable SNVS clock */
-	clock_enable(CCGR_SNVS, 1);
-	/* Initialize glitch detect */
-	writel(SNVS_LPPGDR_INIT, SNVS_BASE_ADDR + SNVS_LPLVDR);
-	/* Clear interrupt status */
-	writel(0xffffffff, SNVS_BASE_ADDR + SNVS_LPSR);
 }
 
 static void setup_mac_address(void)
@@ -98,13 +83,20 @@ static void setup_boot_device(void)
 
 int board_init(void)
 {
-	setup_snvs();
 	return 0;
 }
 
 int board_late_init(void)
 {
+	struct udevice *dev;
+	int ret;
+
 	setup_boot_device();
 	setup_mac_address();
+
+	ret = uclass_get_device_by_name(UCLASS_MISC, "usb-hub@2c", &dev);
+	if (ret)
+		printf("Error bringing up USB hub (%d)\n", ret);
+
 	return 0;
 }

@@ -14,8 +14,7 @@
 #define PHYS_SDRAM_SIZE			SZ_512M
 
 /* MMC Config*/
-#define CONFIG_SYS_FSL_ESDHC_ADDR       USDHC3_BASE_ADDR
-#define CONFIG_SYS_FSL_ESDHC_HAS_DDR_MODE
+#define CFG_SYS_FSL_ESDHC_ADDR       USDHC3_BASE_ADDR
 
 #define CONFIG_DFU_ENV_SETTINGS \
 	"dfu_alt_info=boot raw 0x2 0x1000 mmcpart 1\0" \
@@ -89,14 +88,9 @@
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE	IRAM_SIZE
 
-#define CONFIG_SYS_INIT_SP_OFFSET \
-	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)
-#define CONFIG_SYS_INIT_SP_ADDR \
-	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
-
 /* environment organization */
 
-#define CONFIG_SYS_FSL_USDHC_NUM	1
+#define CFG_SYS_FSL_USDHC_NUM	1
 
 
 #define CONFIG_MXC_USB_PORTSC		(PORT_PTS_UTMI | PORT_PTS_PTW)
@@ -105,8 +99,6 @@
 
 /* USB Device Firmware Update support */
 #define DFU_DEFAULT_POLL_TIMEOUT	300
-
-#define CONFIG_USBNET_DEV_ADDR		"de:ad:be:af:00:01"
 
 /* Environment variable name to represent HAB enable state */
 #define HAB_ENABLED_ENVNAME		"hab_enabled"

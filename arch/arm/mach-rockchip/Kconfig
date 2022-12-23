@@ -246,6 +246,7 @@ config ROCKCHIP_RK3399
 	select DM_PMIC
 	select DM_REGULATOR_FIXED
 	select BOARD_LATE_INIT
+	imply PARTITION_TYPE_GUID
 	imply PRE_CONSOLE_BUFFER
 	imply ROCKCHIP_COMMON_BOARD
 	imply ROCKCHIP_SDRAM_COMMON
@@ -361,6 +362,16 @@ config ROCKCHIP_BOOT_MODE_REG
 	  The Soc will enter to different boot mode(defined in asm/arch-rockchip/boot_mode.h)
 	  according to the value from this register.
 
+config ROCKCHIP_RK8XX_DISABLE_BOOT_ON_POWERON
+	bool "Disable device boot on power plug-in"
+	depends on PMIC_RK8XX
+	default n
+	---help---
+	  Say Y here to prevent the device from booting up because of a plug-in
+	  event. When set, the device will boot briefly to determine why it was
+	  powered on, and if it was determined because of a plug-in event
+	  instead of a button press event it will shut back off.
+
 config ROCKCHIP_STIMER
 	bool "Rockchip STIMER support"
 	default y
@@ -415,15 +426,13 @@ config SPL_MMC
 
 config ROCKCHIP_SPI_IMAGE
 	bool "Build a SPI image for rockchip"
-	depends on HAS_ROM
 	help
 	  Some Rockchip SoCs support booting from SPI flash. Enable this
-	  option to produce a 4MB SPI-flash image (called u-boot.rom)
-	  containing U-Boot. The image is built by binman. U-Boot sits near
-	  the start of the image.
+	  option to produce a SPI-flash image containing U-Boot. The image
+	  is built by binman. U-Boot sits near the start of the image.
 
 config LNX_KRNL_IMG_TEXT_OFFSET_BASE
-	default SYS_TEXT_BASE
+	default TEXT_BASE
 
 source "arch/arm/mach-rockchip/px30/Kconfig"
 source "arch/arm/mach-rockchip/rk3036/Kconfig"
